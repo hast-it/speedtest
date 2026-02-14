@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<link rel="shortcut icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no" />
+<meta charset="UTF-8" />
+<title>HAST IT Speedtest</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="text/javascript" src="speedtest.js"></script>
+<script type="text/javascript">
+function I(i){return document.getElementById(i);}
+
+//LIST OF TEST SERVERS. Multiple servers for internal and external network testing
+var SPEEDTEST_SERVERS=[
+	{
+		name:"Extern (Internet)",
+		server:"//speed.hast-it.de/",
+		dlURL:"backend/garbage.php",
+		ulURL:"backend/empty.php",
+		pingURL:"backend/empty.php",
+		getIpURL:"backend/getIP.php"
+	},
+	{
+		name:"Intern (RZ-Netzwerk)",
+		server:"//speed.artemis.evo/",
+		dlURL:"backend/garbage.php",
+		ulURL:"backend/empty.php",
+		pingURL:"backend/empty.php",
+		getIpURL:"backend/getIP.php"
+	}
+];
+
+//INITIALIZE SPEEDTEST
+var s=new Speedtest();
+s.setParameter("telemetry_level","basic");
+
+//SERVER AUTO SELECTION
+function initServers(){
+	if(SPEEDTEST_SERVERS.length==0){
+		I("loading").className="hidden";
+		I("serverArea").style.display="none";
+		I("testWrapper").className="visible";
+		initUI();
+	}else{
+		var noServersAvailable=function(){
+			I("message").innerHTML="Keine Server verfügbar";
+		}
+		var runServerSelect=function(){
+			s.selectServer(function(server){
+				if(server!=null){
+					I("loading").className="hidden";
+					for(var i=0;i<SPEEDTEST_SERVERS.length;i++){
+						if(SPEEDTEST_SERVERS[i].pingT==-1) continue;
+						var option=document.createElement("option");
+						option.value=i;
+						option.textContent=SPEEDTEST_SERVERS[i].name;
+						if(SPEEDTEST_SERVERS[i]===server) option.selected=true;
+						I("server").appendChild(option);
+					}
+					I("testWrapper").className="visible";
+					initUI();
+				}else{
+					noServersAvailable();
+				}
+			});
+		}
+		if(typeof SPEEDTEST_SERVERS === "string"){
+			s.loadServerList(SPEEDTEST_SERVERS,function(servers){
+				if(servers==null){
+					noServersAvailable();
+				}else{
+					SPEEDTEST_SERVERS=servers;
+					runServerSelect();
+				}
+			});
+		}else{
+			s.addTestPoints(SPEEDTEST_SERVERS);
+			runServerSelect();
+		}
+	}
+}
+
+var meterBk=/Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent)?"#EAEAEA":"#80808040";
+var dlColor="#10b981",
+	ulColor="#3b82f6";
+var progColor=meterBk;
+
+//CODE FOR GAUGES
+function drawMeter(c,amount,bk,fg,progress,prog){
+	var ctx=c.getContext("2d");
+	var dp=window.devicePixelRatio||1;
+	var cw=c.clientWidth*dp, ch=c.clientHeight*dp;
+	var sizScale=ch*0.0055;
+	if(c.width==cw&&c.height==ch){
+		ctx.clearRect(0,0,cw,ch);
+	}else{
+		c.width=cw;
+		c.height=ch;
+	}
+	ctx.beginPath();
+	ctx.strokeStyle=bk;
+	ctx.lineWidth=12*sizScale;
+	ctx.arc(c.width/2,c.height-58*sizScale,c.height/1.8-ctx.lineWidth,-Math.PI*1.1,Math.PI*0.1);
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.strokeStyle=fg;
+	ctx.lineWidth=12*sizScale;
+	ctx.arc(c.width/2,c.height-58*sizScale,c.height/1.8-ctx.lineWidth,-Math.PI*1.1,amount*Math.PI*1.2-Math.PI*1.1);
+	ctx.stroke();
+	if(typeof progress !== "undefined"){
+		ctx.fillStyle=prog;
+		ctx.fillRect(c.width*0.3,c.height-16*sizScale,c.width*0.4*progress,4*sizScale);
+	}
+}
+function mbpsToAmount(s){
+	return 1-(1/(Math.pow(1.3,Math.sqrt(s))));
+}
+function format(d){
+    d=Number(d);
+    if(d<10) return d.toFixed(2);
+    if(d<100) return d.toFixed(1);
+    return d.toFixed(0);
+}
+
+//UI CODE
+var uiData=null;
+function startStop(){
+    if(s.getState()==3){
+		s.abort();
+		data=null;
+		I("startStopBtn").className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+		I("server").disabled=false;
+		initUI();
+	}else{
+		I("startStopBtn").className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+		I("shareArea").style.display="none";
+		I("server").disabled=true;
+		s.onupdate=function(data){
+            uiData=data;
+		};
+		s.onend=function(aborted){
+            I("startStopBtn").className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+            I("server").disabled=false;
+            updateUI(true);
+            if(!aborted){
+                try{
+                    var testId=uiData.testId;
+                    if(testId!=null){
+                        var shareURL=window.location.href.substring(0,window.location.href.lastIndexOf("/"))+"/results/?id="+testId;
+                        I("resultsImg").src=shareURL;
+                        I("resultsImg").alt="Download: "+uiData.dlStatus+" Mbps, Upload: "+uiData.ulStatus+" Mbps, Ping: "+uiData.pingStatus+" ms, Jitter: "+uiData.jitterStatus+" ms";
+                        I("resultsURL").value=shareURL;
+                        I("testId").innerHTML=testId;
+                        I("shareArea").style.display="";
+                    }
+                }catch(e){}
+            }
+		};
+		s.start();
+	}
+}
+function updateUI(forced){
+	if(!forced&&s.getState()!=3) return;
+	if(uiData==null) return;
+	var status=uiData.testState;
+	I("ip").textContent=uiData.clientIp;
+	I("dlText").textContent=(status==1&&uiData.dlStatus==0)?"...":format(uiData.dlStatus);
+	drawMeter(I("dlMeter"),mbpsToAmount(Number(uiData.dlStatus*(status==1?oscillate():1))),meterBk,dlColor,Number(uiData.dlProgress),progColor);
+	I("ulText").textContent=(status==3&&uiData.ulStatus==0)?"...":format(uiData.ulStatus);
+	drawMeter(I("ulMeter"),mbpsToAmount(Number(uiData.ulStatus*(status==3?oscillate():1))),meterBk,ulColor,Number(uiData.ulProgress),progColor);
+	I("pingText").textContent=format(uiData.pingStatus);
+	I("jitText").textContent=format(uiData.jitterStatus);
+}
+function oscillate(){
+	return 1+0.02*Math.sin(Date.now()/100);
+}
+window.requestAnimationFrame=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.msRequestAnimationFrame||(function(callback,element){setTimeout(callback,1000/60);});
+function frame(){
+	requestAnimationFrame(frame);
+	updateUI();
+}
+frame();
+function initUI(){
+	drawMeter(I("dlMeter"),0,meterBk,dlColor,0);
+	drawMeter(I("ulMeter"),0,meterBk,ulColor,0);
+	I("dlText").textContent="";
+	I("ulText").textContent="";
+	I("pingText").textContent="";
+	I("jitText").textContent="";
+	I("ip").textContent="";
+}
+</script>
+<style>
+@keyframes spin{
+	0%{transform:rotate(0deg);}
+	100%{transform:rotate(359deg);}
+}
+.loadCircle{
+	display:inline-block;
+	width:2em;
+	height:2em;
+	vertical-align:middle;
+	background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAP1BMVEUAAAB2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZyFzwnAAAAFHRSTlMAEvRFvX406baecwbf0casimhSHyiwmqgAAADpSURBVHja7dbJbQMxAENRahnN5lkc//5rDRAkDeRgHszXgACJoKiIiIiIiIiIiIiIiIiIiIj4HHspsrpAVhdVVguzrA4OWc10WcEqpwKbnBo0OU1Q5NSpsoJFTgOecrrdEag85DRgktNqfoEdTjnd7hrEHMEJvmRUYJbTYk5Agy6nau6Abp5Cm7mDBtRdPi9gyKdU7w4p1fsLvyqs8hl4z9/w3n/Hmr9WoQ65lAU4d7lMYOz//QboRR5jBZibLMZdAR6O/Vfa1PlxNr3XdS3HzK/HVPRu/KnLs8iAOh993VpRRERERMT/fAN60wwWaVyWwAAAAABJRU5ErkJggg==');
+	background-size:2em 2em;
+	margin-right:0.5em;
+	animation: spin 0.6s linear infinite;
+}
+canvas{
+	position:absolute;
+	top:0; left:0; width:100%; height:100%;
+	z-index:1;
+}
+@keyframes fadeIn{
+	0%{opacity:0;}
+	100%{opacity:1;}
+}
+@keyframes fadeOut{
+	0%{display:block; opacity:1;}
+	100%{display:block; opacity:0;}
+}
+.visible{
+	animation: fadeIn 0.4s;
+	display:block;
+}
+.hidden{
+	animation: fadeOut 0.4s;
+	display:none;
+}
+</style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen" onload="initServers()">
+	<div class="container mx-auto px-4 py-8">
+		<!-- Header with Logo -->
+		<div class="text-center mb-8">
+			<img src="signatur.png" alt="HAST IT" class="mx-auto h-16 md:h-20 mb-4">
+			<h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Speedtest</h1>
+			<p class="text-gray-600">Messen Sie Ihre Internetgeschwindigkeit</p>
+		</div>
+
+		<!-- Loading Screen -->
+		<div id="loading" class="visible">
+			<div class="text-center py-12">
+				<span class="loadCircle"></span>
+				<p id="message" class="text-lg text-gray-700">Server wird ausgewählt...</p>
+			</div>
+		</div>
+
+		<!-- Main Test Area -->
+		<div id="testWrapper" class="hidden">
+			<div class="max-w-6xl mx-auto">
+				<!-- Start/Stop Button and Server Selection -->
+				<div class="text-center mb-8">
+					<div id="startStopBtn"
+						 class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block"
+						 onclick="startStop()">
+						Test starten
+					</div>
+
+					<div id="serverArea" class="mt-4">
+						<label class="text-gray-700 font-medium mr-2">Server:</label>
+						<select id="server"
+								class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+								onchange="s.setSelectedServer(SPEEDTEST_SERVERS[this.value])">
+						</select>
+					</div>
+				</div>
+
+				<!-- Test Results Grid -->
+				<div id="test" class="mb-12">
+					<!-- Ping and Jitter Row -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+						<div class="bg-white rounded-xl shadow-lg p-6 text-center">
+							<div class="text-gray-600 text-lg font-medium mb-2">Ping</div>
+							<div id="pingText" class="text-5xl font-bold text-orange-500 mb-2"></div>
+							<div class="text-gray-500">ms</div>
+						</div>
+						<div class="bg-white rounded-xl shadow-lg p-6 text-center">
+							<div class="text-gray-600 text-lg font-medium mb-2">Jitter</div>
+							<div id="jitText" class="text-5xl font-bold text-orange-500 mb-2"></div>
+							<div class="text-gray-500">ms</div>
+						</div>
+					</div>
+
+					<!-- Download and Upload Row -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<div class="text-center mb-4">
+								<div class="text-gray-600 text-lg font-medium mb-2">Download</div>
+							</div>
+							<div class="relative h-64">
+								<canvas id="dlMeter" class="meter"></canvas>
+								<div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
+									<div id="dlText" class="text-5xl font-bold text-green-500 mb-2"></div>
+									<div class="text-gray-500">Mbit/s</div>
+								</div>
+							</div>
+						</div>
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<div class="text-center mb-4">
+								<div class="text-gray-600 text-lg font-medium mb-2">Upload</div>
+							</div>
+							<div class="relative h-64">
+								<canvas id="ulMeter" class="meter"></canvas>
+								<div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
+									<div id="ulText" class="text-5xl font-bold text-blue-500 mb-2"></div>
+									<div class="text-gray-500">Mbit/s</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- IP Address -->
+					<div class="text-center mt-6">
+						<span class="text-gray-600">Ihre IP: </span>
+						<span id="ip" class="font-mono text-gray-800 font-medium"></span>
+					</div>
+
+					<!-- Share Results -->
+					<div id="shareArea" class="mt-8 bg-white rounded-xl shadow-lg p-6" style="display:none">
+						<h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Ergebnis teilen</h3>
+						<p class="text-gray-600 mb-4 text-center">Test ID: <span id="testId" class="font-mono font-medium"></span></p>
+						<input type="text"
+							   id="resultsURL"
+							   readonly
+							   class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
+							   onclick="this.select();this.focus();this.select();document.execCommand('copy');alert('Link kopiert!')"/>
+						<img src="" id="resultsImg" class="mx-auto max-w-full h-auto rounded-lg shadow" />
+					</div>
+				</div>
+
+				<!-- Footer -->
+				<div class="text-center text-sm text-gray-600 space-y-2">
+					<div>
+						<a href="#"
+						   onclick="I('privacyPolicy').style.display='block'; return false;"
+						   class="text-green-600 hover:text-green-700 font-medium">
+							Datenschutz
+						</a>
+					</div>
+					<div class="flex items-center justify-center gap-2 text-gray-500">
+						<span>Powered by</span>
+						<a href="https://github.com/librespeed/speedtest"
+						   target="_blank"
+						   class="text-green-600 hover:text-green-700 font-medium">
+							LibreSpeed
+						</a>
+						<span>(LGPL v3)</span>
+					</div>
+					<div>
+						<a href="https://github.com/hast-it/speedtest"
+						   target="_blank"
+						   class="text-green-600 hover:text-green-700 font-medium">
+							Source Code
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Privacy Policy Modal -->
+		<div id="privacyPolicy" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl max-w-2xl max-h-[90vh] overflow-y-auto p-8">
+				<h2 class="text-2xl font-bold text-gray-800 mb-4">Datenschutzerklärung</h2>
+				<p class="text-gray-700 mb-4">Dieser Speedtest-Server ist mit Telemetrie konfiguriert.</p>
+
+				<h4 class="text-lg font-semibold text-gray-800 mb-2">Welche Daten wir sammeln</h4>
+				<p class="text-gray-700 mb-2">Am Ende des Tests werden folgende Daten erfasst und gespeichert:</p>
+				<ul class="list-disc list-inside text-gray-700 mb-4 space-y-1">
+					<li>Test-ID</li>
+					<li>Zeitpunkt des Tests</li>
+					<li>Testergebnisse (Download/Upload-Geschwindigkeit, Ping und Jitter)</li>
+					<li>IP-Adresse</li>
+					<li>ISP-Informationen</li>
+					<li>Ungefährer Standort (abgeleitet von der IP-Adresse, kein GPS)</li>
+					<li>User Agent und Browser-Locale</li>
+					<li>Test-Log (enthält keine persönlichen Informationen)</li>
+				</ul>
+
+				<h4 class="text-lg font-semibold text-gray-800 mb-2">Wie wir die Daten verwenden</h4>
+				<p class="text-gray-700 mb-2">Die gesammelten Daten werden verwendet für:</p>
+				<ul class="list-disc list-inside text-gray-700 mb-4 space-y-1">
+					<li>Teilen von Testergebnissen</li>
+					<li>Verbesserung des Services</li>
+				</ul>
+				<p class="text-gray-700 mb-4">Keine persönlichen Informationen werden an Dritte weitergegeben.</p>
+
+				<h4 class="text-lg font-semibold text-gray-800 mb-2">Ihre Zustimmung</h4>
+				<p class="text-gray-700 mb-4">
+					Durch das Starten des Tests stimmen Sie den Bedingungen dieser Datenschutzerklärung zu.
+				</p>
+
+				<h4 class="text-lg font-semibold text-gray-800 mb-2">Datenlöschung</h4>
+				<p class="text-gray-700 mb-4">
+					Wenn Sie Ihre Daten löschen lassen möchten, kontaktieren Sie uns bitte mit der Test-ID oder Ihrer IP-Adresse.
+				</p>
+
+				<div class="text-center mt-6">
+					<button onclick="I('privacyPolicy').style.display='none'"
+							class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300">
+						Schließen
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	// Update button text based on state
+	setInterval(function(){
+		if(s.getState()==3){
+			I('startStopBtn').innerHTML = 'Test abbrechen';
+		} else {
+			I('startStopBtn').innerHTML = 'Test starten';
+		}
+	}, 100);
+	</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# SSL Certificates and Keys
+*.crt
+*.key
+*.pem
+*.pfx
+*.p12
+*.req
+*.inf
+*.csr
+*.cer
+
+# Installation Scripts
+install-*.sh
+*.sh
+
+# Credentials
+*credentials*.txt
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Private keys
+private/
