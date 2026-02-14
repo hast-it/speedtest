@@ -6,6 +6,19 @@
 <meta charset="UTF-8" />
 <title>HAST IT Speedtest</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+	theme: {
+		extend: {
+			colors: {
+				'hast-green': '#10b981',
+				'dark-bg': '#0f172a',
+				'dark-card': '#1e293b',
+			}
+		}
+	}
+}
+</script>
 <script type="text/javascript" src="speedtest.js"></script>
 <script type="text/javascript">
 function I(i){return document.getElementById(i);}
@@ -80,7 +93,7 @@ function initServers(){
 	}
 }
 
-var meterBk=/Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent)?"#EAEAEA":"#80808040";
+var meterBk=/Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent)?"#334155":"#33415540";
 var dlColor="#10b981",
 	ulColor="#3b82f6";
 var progColor=meterBk;
@@ -128,18 +141,18 @@ function startStop(){
     if(s.getState()==3){
 		s.abort();
 		data=null;
-		I("startStopBtn").className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+		I("startStopBtn").className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-4 px-10 rounded-xl text-xl transition-all duration-300 cursor-pointer shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60 inline-block transform hover:scale-105";
 		I("server").disabled=false;
 		initUI();
 	}else{
-		I("startStopBtn").className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+		I("startStopBtn").className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-4 px-10 rounded-xl text-xl transition-all duration-300 cursor-pointer shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 inline-block transform hover:scale-105";
 		I("shareArea").style.display="none";
 		I("server").disabled=true;
 		s.onupdate=function(data){
             uiData=data;
 		};
 		s.onend=function(aborted){
-            I("startStopBtn").className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block";
+            I("startStopBtn").className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-4 px-10 rounded-xl text-xl transition-all duration-300 cursor-pointer shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60 inline-block transform hover:scale-105";
             I("server").disabled=false;
             updateUI(true);
             if(!aborted){
@@ -204,6 +217,7 @@ function initUI(){
 	background-size:2em 2em;
 	margin-right:0.5em;
 	animation: spin 0.6s linear infinite;
+	filter: brightness(1.5);
 }
 canvas{
 	position:absolute;
@@ -226,40 +240,55 @@ canvas{
 	animation: fadeOut 0.4s;
 	display:none;
 }
+@keyframes gradient {
+	0% { background-position: 0% 50%; }
+	50% { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
 </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen" onload="initServers()">
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen" onload="initServers()">
 	<div class="container mx-auto px-4 py-8">
+		<!-- Animated Background Orbs -->
+		<div class="fixed inset-0 overflow-hidden pointer-events-none">
+			<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+			<div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+		</div>
+
 		<!-- Header with Logo -->
-		<div class="text-center mb-8">
-			<img src="signatur.png" alt="HAST IT" class="mx-auto h-16 md:h-20 mb-4">
-			<h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Speedtest</h1>
-			<p class="text-gray-600">Messen Sie Ihre Internetgeschwindigkeit</p>
+		<div class="text-center mb-12 relative z-10">
+			<img src="signatur.png" alt="HAST IT" class="mx-auto h-20 md:h-24 mb-6 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform duration-300">
+			<h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-3 tracking-tight">
+				Speedtest
+			</h1>
+			<p class="text-slate-400 text-lg">Messen Sie Ihre Internetgeschwindigkeit</p>
 		</div>
 
 		<!-- Loading Screen -->
-		<div id="loading" class="visible">
-			<div class="text-center py-12">
-				<span class="loadCircle"></span>
-				<p id="message" class="text-lg text-gray-700">Server wird ausgewählt...</p>
+		<div id="loading" class="visible relative z-10">
+			<div class="text-center py-16">
+				<div class="inline-block bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl px-8 py-6 shadow-2xl">
+					<span class="loadCircle"></span>
+					<p id="message" class="text-lg text-slate-200">Server wird ausgewählt...</p>
+				</div>
 			</div>
 		</div>
 
 		<!-- Main Test Area -->
-		<div id="testWrapper" class="hidden">
+		<div id="testWrapper" class="hidden relative z-10">
 			<div class="max-w-6xl mx-auto">
 				<!-- Start/Stop Button and Server Selection -->
-				<div class="text-center mb-8">
+				<div class="text-center mb-10">
 					<div id="startStopBtn"
-						 class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl inline-block"
+						 class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-4 px-10 rounded-xl text-xl transition-all duration-300 cursor-pointer shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/60 inline-block transform hover:scale-105"
 						 onclick="startStop()">
 						Test starten
 					</div>
 
-					<div id="serverArea" class="mt-4">
-						<label class="text-gray-700 font-medium mr-2">Server:</label>
+					<div id="serverArea" class="mt-6">
+						<label class="text-slate-300 font-medium mr-3">Server:</label>
 						<select id="server"
-								class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+								class="bg-slate-800 text-slate-200 px-5 py-3 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-lg hover:bg-slate-750"
 								onchange="s.setSelectedServer(SPEEDTEST_SERVERS[this.value])">
 						</select>
 					</div>
@@ -269,79 +298,81 @@ canvas{
 				<div id="test" class="mb-12">
 					<!-- Ping and Jitter Row -->
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-						<div class="bg-white rounded-xl shadow-lg p-6 text-center">
-							<div class="text-gray-600 text-lg font-medium mb-2">Ping</div>
-							<div id="pingText" class="text-5xl font-bold text-orange-500 mb-2"></div>
-							<div class="text-gray-500">ms</div>
+						<div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl p-8 text-center hover:scale-105 transition-transform duration-300">
+							<div class="text-slate-400 text-lg font-medium mb-3 uppercase tracking-wider">Ping</div>
+							<div id="pingText" class="text-6xl font-bold bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent mb-3"></div>
+							<div class="text-slate-500 text-sm uppercase tracking-widest">ms</div>
 						</div>
-						<div class="bg-white rounded-xl shadow-lg p-6 text-center">
-							<div class="text-gray-600 text-lg font-medium mb-2">Jitter</div>
-							<div id="jitText" class="text-5xl font-bold text-orange-500 mb-2"></div>
-							<div class="text-gray-500">ms</div>
+						<div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl p-8 text-center hover:scale-105 transition-transform duration-300">
+							<div class="text-slate-400 text-lg font-medium mb-3 uppercase tracking-wider">Jitter</div>
+							<div id="jitText" class="text-6xl font-bold bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent mb-3"></div>
+							<div class="text-slate-500 text-sm uppercase tracking-widest">ms</div>
 						</div>
 					</div>
 
 					<!-- Download and Upload Row -->
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div class="bg-white rounded-xl shadow-lg p-6">
-							<div class="text-center mb-4">
-								<div class="text-gray-600 text-lg font-medium mb-2">Download</div>
+						<div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform duration-300">
+							<div class="text-center mb-6">
+								<div class="text-slate-400 text-lg font-medium uppercase tracking-wider">Download</div>
 							</div>
-							<div class="relative h-64">
+							<div class="relative h-72">
 								<canvas id="dlMeter" class="meter"></canvas>
-								<div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
-									<div id="dlText" class="text-5xl font-bold text-green-500 mb-2"></div>
-									<div class="text-gray-500">Mbit/s</div>
+								<div class="absolute inset-0 flex flex-col items-center justify-end pb-10">
+									<div id="dlText" class="text-6xl font-bold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent mb-3"></div>
+									<div class="text-slate-500 text-sm uppercase tracking-widest">Mbit/s</div>
 								</div>
 							</div>
 						</div>
-						<div class="bg-white rounded-xl shadow-lg p-6">
-							<div class="text-center mb-4">
-								<div class="text-gray-600 text-lg font-medium mb-2">Upload</div>
+						<div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl p-8 hover:scale-105 transition-transform duration-300">
+							<div class="text-center mb-6">
+								<div class="text-slate-400 text-lg font-medium uppercase tracking-wider">Upload</div>
 							</div>
-							<div class="relative h-64">
+							<div class="relative h-72">
 								<canvas id="ulMeter" class="meter"></canvas>
-								<div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
-									<div id="ulText" class="text-5xl font-bold text-blue-500 mb-2"></div>
-									<div class="text-gray-500">Mbit/s</div>
+								<div class="absolute inset-0 flex flex-col items-center justify-end pb-10">
+									<div id="ulText" class="text-6xl font-bold bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent mb-3"></div>
+									<div class="text-slate-500 text-sm uppercase tracking-widest">Mbit/s</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
 					<!-- IP Address -->
-					<div class="text-center mt-6">
-						<span class="text-gray-600">Ihre IP: </span>
-						<span id="ip" class="font-mono text-gray-800 font-medium"></span>
+					<div class="text-center mt-8">
+						<div class="inline-block bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl px-6 py-3">
+							<span class="text-slate-400">Ihre IP: </span>
+							<span id="ip" class="font-mono text-emerald-400 font-medium"></span>
+						</div>
 					</div>
 
 					<!-- Share Results -->
-					<div id="shareArea" class="mt-8 bg-white rounded-xl shadow-lg p-6" style="display:none">
-						<h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Ergebnis teilen</h3>
-						<p class="text-gray-600 mb-4 text-center">Test ID: <span id="testId" class="font-mono font-medium"></span></p>
+					<div id="shareArea" class="mt-10 bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl p-8" style="display:none">
+						<h3 class="text-2xl font-bold text-white mb-6 text-center">Ergebnis teilen</h3>
+						<p class="text-slate-300 mb-6 text-center">Test ID: <span id="testId" class="font-mono font-medium text-emerald-400"></span></p>
 						<input type="text"
 							   id="resultsURL"
 							   readonly
-							   class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
+							   class="w-full bg-slate-900 text-slate-200 px-5 py-3 border border-slate-700 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
 							   onclick="this.select();this.focus();this.select();document.execCommand('copy');alert('Link kopiert!')"/>
-						<img src="" id="resultsImg" class="mx-auto max-w-full h-auto rounded-lg shadow" />
+						<img src="" id="resultsImg" class="mx-auto max-w-full h-auto rounded-xl shadow-2xl" />
 					</div>
 				</div>
 
 				<!-- Footer -->
-				<div class="text-center text-sm text-gray-600 space-y-2">
+				<div class="text-center text-sm text-slate-500 space-y-3 mt-16">
 					<div>
 						<a href="#"
-						   onclick="I('privacyPolicy').style.display='block'; return false;"
-						   class="text-green-600 hover:text-green-700 font-medium">
+						   onclick="I('privacyPolicy').style.display='flex'; return false;"
+						   class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
 							Datenschutz
 						</a>
 					</div>
-					<div class="flex items-center justify-center gap-2 text-gray-500">
+					<div class="flex items-center justify-center gap-2">
 						<span>Powered by</span>
 						<a href="https://github.com/librespeed/speedtest"
 						   target="_blank"
-						   class="text-green-600 hover:text-green-700 font-medium">
+						   class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
 							LibreSpeed
 						</a>
 						<span>(LGPL v3)</span>
@@ -349,7 +380,7 @@ canvas{
 					<div>
 						<a href="https://github.com/hast-it/speedtest"
 						   target="_blank"
-						   class="text-green-600 hover:text-green-700 font-medium">
+						   class="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
 							Source Code
 						</a>
 					</div>
@@ -358,14 +389,14 @@ canvas{
 		</div>
 
 		<!-- Privacy Policy Modal -->
-		<div id="privacyPolicy" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-			<div class="bg-white rounded-xl shadow-2xl max-w-2xl max-h-[90vh] overflow-y-auto p-8">
-				<h2 class="text-2xl font-bold text-gray-800 mb-4">Datenschutzerklärung</h2>
-				<p class="text-gray-700 mb-4">Dieser Speedtest-Server ist mit Telemetrie konfiguriert.</p>
+		<div id="privacyPolicy" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+			<div class="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-2xl max-h-[90vh] overflow-y-auto p-10">
+				<h2 class="text-3xl font-bold text-white mb-6">Datenschutzerklärung</h2>
+				<p class="text-slate-300 mb-6">Dieser Speedtest-Server ist mit Telemetrie konfiguriert.</p>
 
-				<h4 class="text-lg font-semibold text-gray-800 mb-2">Welche Daten wir sammeln</h4>
-				<p class="text-gray-700 mb-2">Am Ende des Tests werden folgende Daten erfasst und gespeichert:</p>
-				<ul class="list-disc list-inside text-gray-700 mb-4 space-y-1">
+				<h4 class="text-xl font-semibold text-white mb-3">Welche Daten wir sammeln</h4>
+				<p class="text-slate-300 mb-3">Am Ende des Tests werden folgende Daten erfasst und gespeichert:</p>
+				<ul class="list-disc list-inside text-slate-300 mb-6 space-y-2 ml-4">
 					<li>Test-ID</li>
 					<li>Zeitpunkt des Tests</li>
 					<li>Testergebnisse (Download/Upload-Geschwindigkeit, Ping und Jitter)</li>
@@ -376,27 +407,27 @@ canvas{
 					<li>Test-Log (enthält keine persönlichen Informationen)</li>
 				</ul>
 
-				<h4 class="text-lg font-semibold text-gray-800 mb-2">Wie wir die Daten verwenden</h4>
-				<p class="text-gray-700 mb-2">Die gesammelten Daten werden verwendet für:</p>
-				<ul class="list-disc list-inside text-gray-700 mb-4 space-y-1">
+				<h4 class="text-xl font-semibold text-white mb-3">Wie wir die Daten verwenden</h4>
+				<p class="text-slate-300 mb-3">Die gesammelten Daten werden verwendet für:</p>
+				<ul class="list-disc list-inside text-slate-300 mb-6 space-y-2 ml-4">
 					<li>Teilen von Testergebnissen</li>
 					<li>Verbesserung des Services</li>
 				</ul>
-				<p class="text-gray-700 mb-4">Keine persönlichen Informationen werden an Dritte weitergegeben.</p>
+				<p class="text-slate-300 mb-6">Keine persönlichen Informationen werden an Dritte weitergegeben.</p>
 
-				<h4 class="text-lg font-semibold text-gray-800 mb-2">Ihre Zustimmung</h4>
-				<p class="text-gray-700 mb-4">
+				<h4 class="text-xl font-semibold text-white mb-3">Ihre Zustimmung</h4>
+				<p class="text-slate-300 mb-6">
 					Durch das Starten des Tests stimmen Sie den Bedingungen dieser Datenschutzerklärung zu.
 				</p>
 
-				<h4 class="text-lg font-semibold text-gray-800 mb-2">Datenlöschung</h4>
-				<p class="text-gray-700 mb-4">
+				<h4 class="text-xl font-semibold text-white mb-3">Datenlöschung</h4>
+				<p class="text-slate-300 mb-8">
 					Wenn Sie Ihre Daten löschen lassen möchten, kontaktieren Sie uns bitte mit der Test-ID oder Ihrer IP-Adresse.
 				</p>
 
-				<div class="text-center mt-6">
+				<div class="text-center">
 					<button onclick="I('privacyPolicy').style.display='none'"
-							class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300">
+							class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-emerald-500/50">
 						Schließen
 					</button>
 				</div>
