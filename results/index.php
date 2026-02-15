@@ -88,25 +88,25 @@ function drawImage($speedtest)
     $ispinfo = $data['ispinfo'];
     $timestamp = $data['timestamp'];
 
-    // initialize the image
-    $SCALE = 1.25;
+    // initialize the image - modern HAST IT design
+    $SCALE = 1.5;
     $SMALL_SEP = 8 * $SCALE;
-    $WIDTH = 400 * $SCALE;
-    $HEIGHT = 229 * $SCALE;
+    $WIDTH = 500 * $SCALE;
+    $HEIGHT = 280 * $SCALE;
     $im = imagecreatetruecolor($WIDTH, $HEIGHT);
-    $BACKGROUND_COLOR = imagecolorallocate($im, 255, 255, 255);
+    $BACKGROUND_COLOR = imagecolorallocate($im, 15, 23, 42); // slate-950
 
     // configure fonts
     $FONT_LABEL = tryFont('OpenSans-Semibold');
-    $FONT_LABEL_SIZE = 14 * $SCALE;
-    $FONT_LABEL_SIZE_BIG = 16 * $SCALE;
+    $FONT_LABEL_SIZE = 12 * $SCALE;
+    $FONT_LABEL_SIZE_BIG = 14 * $SCALE;
 
-    $FONT_METER = tryFont('OpenSans-Light');
-    $FONT_METER_SIZE = 20 * $SCALE;
-    $FONT_METER_SIZE_BIG = 22 * $SCALE;
+    $FONT_METER = tryFont('OpenSans-Semibold');
+    $FONT_METER_SIZE = 28 * $SCALE;
+    $FONT_METER_SIZE_BIG = 32 * $SCALE;
 
     $FONT_MEASURE = tryFont('OpenSans-Semibold');
-    $FONT_MEASURE_SIZE = 12 * $SCALE;
+    $FONT_MEASURE_SIZE = 11 * $SCALE;
     $FONT_MEASURE_SIZE_BIG = 12 * $SCALE;
 
     $FONT_ISP = tryFont('OpenSans-Semibold');
@@ -115,51 +115,51 @@ function drawImage($speedtest)
     $FONT_TIMESTAMP = tryFont("OpenSans-Light");
     $FONT_TIMESTAMP_SIZE = 8 * $SCALE;
 
-    $FONT_WATERMARK = tryFont('OpenSans-Light');
-    $FONT_WATERMARK_SIZE = 8 * $SCALE;
+    $FONT_WATERMARK = tryFont('OpenSans-Semibold');
+    $FONT_WATERMARK_SIZE = 10 * $SCALE;
 
-    // configure text colors
-    $TEXT_COLOR_LABEL = imagecolorallocate($im, 40, 40, 40);
-    $TEXT_COLOR_PING_METER = imagecolorallocate($im, 170, 96, 96);
-    $TEXT_COLOR_JIT_METER = imagecolorallocate($im, 170, 96, 96);
-    $TEXT_COLOR_DL_METER = imagecolorallocate($im, 96, 96, 170);
-    $TEXT_COLOR_UL_METER = imagecolorallocate($im, 96, 96, 96);
-    $TEXT_COLOR_MEASURE = imagecolorallocate($im, 40, 40, 40);
-    $TEXT_COLOR_ISP = imagecolorallocate($im, 40, 40, 40);
-    $SEPARATOR_COLOR = imagecolorallocate($im, 192, 192, 192);
-    $TEXT_COLOR_TIMESTAMP = imagecolorallocate($im, 160, 160, 160);
-    $TEXT_COLOR_WATERMARK = imagecolorallocate($im, 160, 160, 160);
+    // configure text colors - HAST IT Dark Mode
+    $TEXT_COLOR_LABEL = imagecolorallocate($im, 148, 163, 184); // slate-400
+    $TEXT_COLOR_PING_METER = imagecolorallocate($im, 251, 146, 60); // orange-400
+    $TEXT_COLOR_JIT_METER = imagecolorallocate($im, 251, 146, 60); // orange-400
+    $TEXT_COLOR_DL_METER = imagecolorallocate($im, 52, 211, 153); // emerald-400
+    $TEXT_COLOR_UL_METER = imagecolorallocate($im, 96, 165, 250); // blue-400
+    $TEXT_COLOR_MEASURE = imagecolorallocate($im, 148, 163, 184); // slate-400
+    $TEXT_COLOR_ISP = imagecolorallocate($im, 100, 116, 139); // slate-500
+    $SEPARATOR_COLOR = imagecolorallocate($im, 51, 65, 85); // slate-700
+    $TEXT_COLOR_TIMESTAMP = imagecolorallocate($im, 100, 116, 139); // slate-500
+    $TEXT_COLOR_WATERMARK = imagecolorallocate($im, 16, 185, 129); // emerald-500
 
-    // configure positioning or the different parts on the image
-    $POSITION_X_PING = 125 * $SCALE;
-    $POSITION_Y_PING_LABEL = 24 * $SCALE;
-    $POSITION_Y_PING_METER = 60 * $SCALE;
-    $POSITION_Y_PING_MEASURE = 60 * $SCALE;
+    // configure positioning - modern centered layout
+    $POSITION_X_PING = 185 * $SCALE;
+    $POSITION_Y_PING_LABEL = 35 * $SCALE;
+    $POSITION_Y_PING_METER = 75 * $SCALE;
+    $POSITION_Y_PING_MEASURE = 75 * $SCALE;
 
-    $POSITION_X_JIT = 275 * $SCALE;
-    $POSITION_Y_JIT_LABEL = 24 * $SCALE;
-    $POSITION_Y_JIT_METER = 60 * $SCALE;
-    $POSITION_Y_JIT_MEASURE = 60 * $SCALE;
+    $POSITION_X_JIT = 375 * $SCALE;
+    $POSITION_Y_JIT_LABEL = 35 * $SCALE;
+    $POSITION_Y_JIT_METER = 75 * $SCALE;
+    $POSITION_Y_JIT_MEASURE = 75 * $SCALE;
 
-    $POSITION_X_DL = 120 * $SCALE;
-    $POSITION_Y_DL_LABEL = 105 * $SCALE;
-    $POSITION_Y_DL_METER = 143 * $SCALE;
-    $POSITION_Y_DL_MEASURE = 169 * $SCALE;
+    $POSITION_X_DL = 185 * $SCALE;
+    $POSITION_Y_DL_LABEL = 125 * $SCALE;
+    $POSITION_Y_DL_METER = 170 * $SCALE;
+    $POSITION_Y_DL_MEASURE = 200 * $SCALE;
 
-    $POSITION_X_UL = 280 * $SCALE;
-    $POSITION_Y_UL_LABEL = 105 * $SCALE;
-    $POSITION_Y_UL_METER = 143 * $SCALE;
-    $POSITION_Y_UL_MEASURE = 169 * $SCALE;
+    $POSITION_X_UL = 375 * $SCALE;
+    $POSITION_Y_UL_LABEL = 125 * $SCALE;
+    $POSITION_Y_UL_METER = 170 * $SCALE;
+    $POSITION_Y_UL_MEASURE = 200 * $SCALE;
 
-    $POSITION_X_ISP = 4 * $SCALE;
-    $POSITION_Y_ISP = 205 * $SCALE;
+    $POSITION_X_ISP = 10 * $SCALE;
+    $POSITION_Y_ISP = 245 * $SCALE;
 
-    $SEPARATOR_Y = 211 * $SCALE;
+    $SEPARATOR_Y = 230 * $SCALE;
 
-    $POSITION_X_TIMESTAMP= 4 * $SCALE;
-    $POSITION_Y_TIMESTAMP = 223 * $SCALE;
+    $POSITION_X_TIMESTAMP= 10 * $SCALE;
+    $POSITION_Y_TIMESTAMP = 268 * $SCALE;
 
-    $POSITION_Y_WATERMARK = 223 * $SCALE;
+    $POSITION_Y_WATERMARK = 268 * $SCALE;
 
     // configure labels
     $MBPS_TEXT = 'Mbit/s';
@@ -168,7 +168,7 @@ function drawImage($speedtest)
     $JIT_TEXT = 'Jitter';
     $DL_TEXT = 'Download';
     $UL_TEXT = 'Upload';
-    $WATERMARK_TEXT = 'LibreSpeed';
+    $WATERMARK_TEXT = 'HAST IT';
 
     // create text boxes for each part of the image
     $mbpsBbox = imageftbbox($FONT_MEASURE_SIZE_BIG, 0, $FONT_MEASURE, $MBPS_TEXT);
